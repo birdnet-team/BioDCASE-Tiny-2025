@@ -91,7 +91,7 @@ sudo chmod a+rw $SERIAL_PORT
 - Modify model.py with your architecture (make sure to compile with optimizer and loss)
 - Modify the training loop in the same file, if you need to
 - Modify pipeline_config.yaml parameters of feature extraction
-- run main.py
+- run biodcase.py
 
 ## Dataset
 
@@ -214,7 +214,7 @@ The [ESP32-S3-Korvo-2](https://www.digikey.de/de/products/detail/espressif-syste
 
 ### Key Entry Points
 
-- `main.py` - Main execution pipeline
+- `biodcase.py` - Main execution pipeline
 - `model.py` - Define your model architecture
 - `feature_extraction.py` - Audio feature extraction implementations
 - `embedded_code_generation.py` - ESP32 code generation utilities
