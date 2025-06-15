@@ -26,6 +26,7 @@ dask = "^2025.2.0"
 plotly = "^6.0.1"
 pydantic = "^2.11.3"
 kaleido = "0.2.1"
+poetry-plugin-export = "^1.9.0"
 
 [build-system]
 requires = ["poetry-core"]
