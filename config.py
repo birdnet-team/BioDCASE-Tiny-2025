@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import yaml
 from pydantic import BaseModel, field_validator, Field
 
@@ -47,7 +49,7 @@ class Config(BaseModel):
     embedded_code_generation: EmbeddedCodeGeneration
 
 
-def load_config() -> Config:
-    with PIPELINE_CONFIG_FILE.open("r") as file:
+def load_config(config_file: Path = PIPELINE_CONFIG_FILE) -> Config:
+    with config_file.open("r") as file:
         yaml_data = yaml.safe_load(file)
     return Config(**yaml_data)

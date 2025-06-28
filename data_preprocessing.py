@@ -44,7 +44,7 @@ def extract_loudest_slice(audio_array, sample_rate, audio_slice_duration_ms):
     return audio_array[start_index:end_index]
 
 
-def run_preprocessing(config: Config):
+def run_preprocessing(config: Config, clips_dir=CLIPS_DIR, preproc_prq_path=PREPROC_PRQ_PATH):
     def do_batch(batch: Iterable[Path]):
         slice_data = []
         for path in batch:
@@ -55,12 +55,12 @@ def run_preprocessing(config: Config):
                 "data": slice,
                 "path": str(path),
                 "label": path.parent.name == "Yellowhammer",
-                "split": SPLIT_FOLDER_TO_SPLIT[path.parents[1].name],
+                "split": SPLIT_FOLDER_TO_SPLIT.get(path.parents[1].name, None),
                 "sample_rate": sample_rate
             }])
         return pd.DataFrame(slice_data)
 
-    clips = list(CLIPS_DIR.rglob("*.wav"))
+    clips = list(clips_dir.rglob("*.wav"))
 
     batches = []
     total_batches = (len(clips) + _PREPROC_DASK_BATCH_SIZE - 1) // _PREPROC_DASK_BATCH_SIZE
@@ -81,7 +81,7 @@ def run_preprocessing(config: Config):
             })
         )
         all_data.to_parquet(
-            PREPROC_PRQ_PATH,
+            preproc_prq_path,
             write_index=False,
             schema={'data': pa.list_(pa.int16())}  # make sure array is serialized correctly
         )

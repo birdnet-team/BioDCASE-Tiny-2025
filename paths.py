@@ -26,4 +26,5 @@ CM_FIG_PATH = REPORTING_DIR / "cm.png"
 
 GEN_CODE_DIR = DATA_DIR / '06_generated_code'
 
-
+EVAL_ZIP_PATH = RAW_DATA_DIR / "Evaluation Set.zip"
+EVAL_CLIPS_DIR = RAW_DATA_DIR / "eval_clips"

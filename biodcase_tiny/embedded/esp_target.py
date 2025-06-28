@@ -21,6 +21,7 @@ to generate the final code.
 import os
 import re
 import shutil
+from copy import copy, deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -92,16 +93,23 @@ def get_model_ops_and_acts(model_buf):
 class ESPTarget:
     def __init__(
         self,
-        model: Model,
+        model: Model | bytes,
         feature_config: FeatureConstants,
-        reference_dataset: Dataset,
+        reference_dataset: Dataset | None = None,
+        quantize: bool = False
     ):
-        self._model_buf = self.get_model_buf(model, reference_dataset)
+        if isinstance(model, Model):   # from Keras
+            if reference_dataset is None:
+                raise ValueError("Reference dataset must be provided when a keras model is passed.")
+            self._model_buf = self._create_model_buf(model, reference_dataset, quantize)
+        elif isinstance(model, bytes): # from tflite serialized model
+            if quantize:
+                raise ValueError("A tflite model was provided but `quantize` set to True.")
+            if reference_dataset is not None:
+                raise ValueError("A tflite model was provided, but `reference_dataset` was provided too.")
+            self._model_buf = deepcopy(model)
         self._model_ops = get_model_ops_and_acts(self._model_buf)
         self._feature_config_buf = self.get_feature_config_buf(feature_config)
-
-        self.model = model
-        self.reference_dataset = reference_dataset
 
     def validate(self):
         """Validate Target inputs, including the compatibility of model."""
@@ -141,13 +149,14 @@ class ESPTarget:
                 shutil.copyfile(src_path, dst_path)
 
     @staticmethod
-    def get_model_buf(model: Model, reference_dataset: Dataset):
+    def _create_model_buf(model: Model, reference_dataset: Dataset, quantize=True):
         converter = tf.lite.TFLiteConverter.from_keras_model(model)
-        converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.inference_input_type = tf.dtypes.int8
-        converter.inference_output_type = tf.dtypes.int8
-        converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-        converter._experimental_disable_per_channel_quantization_for_dense_layers = True
+        converter.optimizations = [tf.lite.Optimize.DEFAULT] if quantize else []
+        if quantize:
+            converter.inference_input_type = tf.dtypes.int8
+            converter.inference_output_type = tf.dtypes.int8
+            converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+            converter._experimental_disable_per_channel_quantization_for_dense_layers = True
 
         def representative_dataset_gen():
             for example_spectrograms, example_spect_labels in reference_dataset.take(10):
@@ -158,6 +167,9 @@ class ESPTarget:
         converter.representative_dataset = representative_dataset_gen
         model_buf = converter.convert()
         return model_buf
+
+    def get_model_buf(self):
+        return self._model_buf
 
     @staticmethod
     def get_feature_config_buf(feature_config: FeatureConstants) -> bytearray:
