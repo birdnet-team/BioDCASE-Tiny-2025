@@ -88,10 +88,14 @@ sudo chmod a+rw $SERIAL_PORT
 ```
 
 ## Usage
+
 - Modify model.py with your architecture (make sure to compile with optimizer and loss)
 - Modify the training loop in the same file, if you need to
 - Modify pipeline_config.yaml parameters of feature extraction
 - run biodcase.py
+
+Important: Writing custom features rather than using what is implemented here, requires implementing a numerically equivalent version on the embedded target too, as that is a necessary condition for the evaluated model to behave identically on the host and on the embedded target.
+This is a non-trivial undertaking, so we generally advice to stick to what is already implemented in this repository.
 
 ## Dataset
 
